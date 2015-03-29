@@ -60,6 +60,16 @@ class Chef
         r = yield
         new_resource.updated_by_last_action(r.updated_by_last_action?)
       end
+
+      def run_as_user(username, &block)
+        return block.call unless username
+        user = Etc.getpwnam(username)
+        Process.fork do
+          Process.uid = user.uid
+          block.call
+        end
+        Process.wait
+      end
     end
   end
 end
